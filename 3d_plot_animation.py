@@ -33,7 +33,7 @@ def main():
         for day_int in range(len(snow_ds['thickness'])):
             dask_queue.append(
                 dask.delayed(plot_both)(future_snow, day_int, future_dem)
-            )
+        )
         dask.compute(params)
         
 
@@ -44,8 +44,8 @@ def load_dataset():
     snow = xr.open_mfdataset(
         f'{Path.home()}/skiles_storage/' \
         'AD_isnobal/animas_direct_update/wy2020/crb/run*/*snow.nc',
-    #data_vars='thickness',
-    parallel=True,
+        #data_vars='thickness',
+        parallel=True,
     ).sel(time=datetime.time(22))
     return snow
 
@@ -54,7 +54,9 @@ def load_dem():
     """
     load dem and then smooth terrain for plotting
     """
-    dem = xr.open_dataset("/uufs/chpc.utah.edu/common/home/u1321700/basin_setup_animasdolores/20211009_sj/topo.nc")
+    dem = xr.open_dataset(
+        f'{Path.home()}/basin_setup_animasdolores/20211009_sj/topo.nc'
+    )
     gauss = scipy.ndimage.gaussian_filter(dem['dem'], sigma=10)
     dem['elevation (m)'] = (('y', 'x'), gauss)
     return dem
@@ -79,19 +81,26 @@ def plot_both(snow_ds, day_int, dem):
     # First subplot -----------------------------
     ax = fig.add_subplot(1, 2, 1)
     snow_ds['thickness'][day_int].plot(
-            cmap=plt.cm.Blues_r, vmax=3.5, 
-            cbar_kwargs={'label': 'Snow Height (m)'}
-        )
+        cmap=plt.cm.Blues_r, vmax=3.5, 
+        cbar_kwargs={'label': 'Snow Height (m)'}
+    )
     ax.scatter(260315, 4198989, color='black')
     ax.text(260615, 4199989, "SASP", color='black')
 
     # Second subplot -----------------------------
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
     ax2.view_init(60, view_angle)
-    colors = get_colors(snow_ds['thickness'][day_int], plt.cm.Blues_r)
-
-    dem['elevation (m)'].plot.surface(ax=ax2, facecolors=colors,
-                           rcount=600, ccount=600, zorder=1)
+    
+    colors = get_colors(
+        snow_ds['thickness'][day_int], 
+        plt.cm.Blues_r
+    )
+    dem['elevation (m)'].plot.surface(ax=ax2, 
+        facecolors=colors,
+        rcount=600, 
+        ccount=600, 
+        zorder=1
+    )
     # locs for study plot location label
     x = np.array([260315, 260315])
     y = np.array([4198989, 4198989])
@@ -103,9 +112,10 @@ def plot_both(snow_ds, day_int, dem):
     ax2.text(260315, 4198989, 4600, "SASP", color='black', zorder=5)
     
     plt.savefig(f'{Path.home()}/skiles_storage/' \
-                'AD_isnobal/out_plot/animation_wy2020_3d_test/' \
-                f'{str((snow_ds["thickness"][day_int].time.dt.strftime("%Y%m%d").values))}.jpg',
-                dpi=300)
+        'AD_isnobal/out_plot/animation_wy2020_3d_test/' \
+        f'{str((snow_ds["thickness"][day_int].time.dt.strftime("%Y%m%d").values))}.jpg',
+        dpi=300
+    )
     
     # testing .clf() for concurrency issue
     plt.close()
