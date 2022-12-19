@@ -34,7 +34,7 @@ def main():
             dask_queue.append(
                 dask.delayed(plot_both)(future_snow, day_int, future_dem)
         )
-        dask.compute(params)
+        dask.compute(dask_queue)
         
 
 def load_dataset():
