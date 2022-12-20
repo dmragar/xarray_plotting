@@ -63,6 +63,13 @@ def load_dem():
 
 
 def get_colors(inp, colormap, vmin=0, vmax=3):
+    """
+    use value range to generate color map.
+    :param inp: data 
+    :param colormap: matplotlib color map
+    :param vim, vmax: range of "thickness" to bound cmap
+    :returns: cmap normalized for values
+    """
     norm = plt.Normalize(vmin, vmax)
     return colormap(norm(inp))
 
@@ -71,6 +78,10 @@ def plot_both(snow_ds, day_int, dem):
     """
     creates plot with two panels showing 3d view of model output, 
     as well as labels at given locations, in this case SASP. 
+    :param snow_ds: isnobal model output, as xarray ds
+    :param day_int: int counter for each frame
+    :param dem: elevation model from topo.nc
+    :returns: None. plots saved to path.
     """
     # do no show plot output, only save
     mpl.use("agg")
@@ -95,7 +106,8 @@ def plot_both(snow_ds, day_int, dem):
         snow_ds['thickness'][day_int], 
         plt.cm.Blues_r
     )
-    dem['elevation (m)'].plot.surface(ax=ax2, 
+    dem['elevation (m)'].plot.surface(
+        ax=ax2, 
         facecolors=colors,
         rcount=600, 
         ccount=600, 
@@ -111,7 +123,8 @@ def plot_both(snow_ds, day_int, dem):
     ax2.plot3D(x, y, z2, zorder=2, color='black')
     ax2.text(260315, 4198989, 4600, "SASP", color='black', zorder=5)
     
-    plt.savefig(f'{Path.home()}/skiles_storage/' \
+    plt.savefig(
+        f'{Path.home()}/skiles_storage/' \
         'AD_isnobal/out_plot/animation_wy2020_3d_test/' \
         f'{str((snow_ds["thickness"][day_int].time.dt.strftime("%Y%m%d").values))}.jpg',
         dpi=300
